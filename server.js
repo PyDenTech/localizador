@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
-const path = require('path');
 
 
 const app = express();
@@ -15,11 +14,6 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
-
-// Servir arquivos estáticos do diretório "public"
-app.use(express.static(path.join(__dirname, 'public')));
-
-
 
 // Rota principal para receber dados do Traccar Client
 app.post('/', async (req, res) => {
