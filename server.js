@@ -1,4 +1,4 @@
-require('dotenv').config();  // Carrega as variáveis do .env
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
