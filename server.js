@@ -14,12 +14,17 @@ const pool = new Pool({
   }
 });
 
+// Rota para exibir mensagem na raiz
+app.get('/', (req, res) => {
+    res.send('Servidor rodando');
+});
+
 // Rota para receber dados do Traccar Client
-app.post('/', async (req, res) => {
+app.post('/traccar', async (req, res) => {
     try {
       const { latitude, longitude, speed, bearing, timestamp } = req.body;
   
-      if (!latitude || !longitude) {
+      if (!latitude || longitude === undefined) {
         return res.status(400).json({ message: 'Dados inválidos!' });
       }
   
@@ -35,9 +40,8 @@ app.post('/', async (req, res) => {
       res.status(500).json({ message: 'Erro no servidor' });
     }
   });
-  
 
-app.listen(5055, '0.0.0.0', () => {
-    console.log('Servidor rodando na porta 5055');
-  });
-  
+// Iniciar o servidor na porta 3000
+app.listen(3000, '0.0.0.0', () => {
+    console.log('Servidor rodando na porta 3000');
+});
