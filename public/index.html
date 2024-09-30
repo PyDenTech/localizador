@@ -7,11 +7,34 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map { height: 600px; width: 100%; }
+        .form-container { margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <h1>Monitoramento de Dispositivos</h1>
+
+<!-- Formulário para adicionar um novo dispositivo -->
+<div class="form-container">
+    <h2>Adicionar Novo Dispositivo</h2>
+    <form id="deviceForm">
+        <label for="nome">Nome do Dispositivo:</label>
+        <input type="text" id="nome" name="nome" required><br><br>
+        <label for="identificador">Identificador:</label>
+        <input type="text" id="identificador" name="identificador" required><br><br>
+        <label for="descricao">Descrição (opcional):</label>
+        <input type="text" id="descricao" name="descricao"><br><br>
+        <button type="submit">Adicionar Dispositivo</button>
+    </form>
+</div>
+
+<!-- Exibição de dispositivos registrados -->
+<div class="device-list">
+    <h2>Dispositivos Registrados</h2>
+    <ul id="deviceList"></ul>
+</div>
+
+<!-- Mapa -->
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -38,8 +61,52 @@
         });
     }
 
+    // Função para buscar dispositivos
+    async function fetchDevices() {
+        const response = await fetch('http://54.232.248.66:3000/devices');
+        const devices = await response.json();
+
+        const deviceList = document.getElementById('deviceList');
+        deviceList.innerHTML = '';
+        devices.forEach(device => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${device.nome} (ID: ${device.identificador})`;
+            deviceList.appendChild(listItem);
+        });
+    }
+
     // Chama a função para buscar localizações
     fetchLocations();
+
+    // Chama a função para buscar dispositivos
+    fetchDevices();
+
+    // Lida com o envio do formulário de novo dispositivo
+    document.getElementById('deviceForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const nome = document.getElementById('nome').value;
+        const identificador = document.getElementById('identificador').value;
+        const descricao = document.getElementById('descricao').value;
+
+        const response = await fetch('http://54.232.248.66:3000/devices', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                nome: nome,
+                identificador: identificador,
+                descricao: descricao,
+            }),
+        });
+
+        const data = await response.json();
+        alert(data.message);
+
+        // Atualiza a lista de dispositivos após adicionar
+        fetchDevices();
+    });
 </script>
 
 </body>
