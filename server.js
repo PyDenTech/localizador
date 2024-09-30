@@ -19,77 +19,44 @@ const pool = new Pool({
 // Servir arquivos estáticos do diretório "public"
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-
-// Rota principal para receber dados do Traccar Client
+// Rota principal para receber dados do OwnTracks
 app.post('/', async (req, res) => {
   try {
-    const { deviceId, latitude, longitude, speed, bearing, timestamp } = req.body;
+      const { lat, lon, vel, tst, tid, batt } = req.body;
 
-    // Verifica se os dados obrigatórios estão presentes
-    if (!deviceId || !latitude || longitude === undefined) {
-      return res.status(400).json({ message: 'Dados inválidos!' });
-    }
+      // Verifica se os dados obrigatórios estão presentes
+      if (!lat || !lon) {
+          return res.status(400).json({ message: 'Dados inválidos!' });
+      }
 
-    // Query para inserir dados no banco de dados, incluindo o deviceId
-    const query = `
-            INSERT INTO localizacao (device_id, latitude, longitude, velocidade, direcao, timestamp)
-            VALUES ($1, $2, $3, $4, $5, $6)
-        `;
-    await pool.query(query, [deviceId, latitude, longitude, speed, bearing, timestamp]);
-
-    res.status(200).json({ message: 'Dados recebidos com sucesso!' });
-  } catch (error) {
-    console.error('Erro ao processar dados: ', error);
-    res.status(500).json({ message: 'Erro no servidor' });
-  }
-});
-
-// Rota para adicionar um novo dispositivo
-app.post('/devices', async (req, res) => {
-  const { nome, identificador, descricao } = req.body;
-
-  // Verifica se os campos obrigatórios estão presentes
-  if (!nome || !identificador) {
-      return res.status(400).json({ message: 'Nome e Identificador são obrigatórios!' });
-  }
-
-  try {
+      const timestamp = new Date(tst * 1000); // Convertendo timestamp UNIX para formato de data
       const query = `
-          INSERT INTO dispositivos (nome, identificador, descricao)
-          VALUES ($1, $2, $3) RETURNING *;
+          INSERT INTO localizacao (device_id, latitude, longitude, velocidade, timestamp, bateria)
+          VALUES ($1, $2, $3, $4, $5, $6)
       `;
-      const result = await pool.query(query, [nome, identificador, descricao]);
+      await pool.query(query, [tid, lat, lon, vel || 0, timestamp, batt || 100]);
 
-      res.status(201).json({ message: 'Dispositivo adicionado com sucesso!', dispositivo: result.rows[0] });
+      res.status(200).json({ message: 'Dados recebidos com sucesso!' });
   } catch (error) {
-      console.error('Erro ao adicionar dispositivo: ', error);
-      res.status(500).json({ message: 'Erro ao adicionar dispositivo' });
+      console.error('Erro ao processar dados: ', error);
+      res.status(500).json({ message: 'Erro no servidor' });
   }
 });
 
-// Rota para listar dispositivos
-app.get('/devices', async (req, res) => {
-  try {
-      const query = 'SELECT * FROM dispositivos';
-      const result = await pool.query(query);
-      res.status(200).json(result.rows);
-  } catch (error) {
-      console.error('Erro ao buscar dispositivos: ', error);
-      res.status(500).json({ message: 'Erro ao buscar dispositivos' });
-  }
-});
-
-
-// Rota para buscar as localizações de todos os dispositivos
+// Rota para buscar as últimas localizações de todos os dispositivos
 app.get('/locations', async (req, res) => {
   try {
-      const query = 'SELECT * FROM localizacao';
+      const query = `
+          SELECT device_id, latitude, longitude, velocidade, timestamp, bateria
+          FROM localizacao
+          ORDER BY timestamp DESC
+          LIMIT 50;  // Limite para trazer as 50 localizações mais recentes
+      `;
       const result = await pool.query(query);
       res.status(200).json(result.rows);
   } catch (error) {
-      console.error('Erro ao buscar dados: ', error);
-      res.status(500).json({ message: 'Erro ao buscar dados' });
+      console.error('Erro ao buscar localizações: ', error);
+      res.status(500).json({ message: 'Erro ao buscar localizações' });
   }
 });
 
