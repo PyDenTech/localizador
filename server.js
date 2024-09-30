@@ -36,7 +36,7 @@ app.post('/', async (req, res) => {
   }
 });
 
-const port = 5055;
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Servidor rodando na porta ${port}`);
-});
+app.listen(5055, '0.0.0.0', () => {
+    console.log('Servidor rodando na porta 5055');
+  });
+  
