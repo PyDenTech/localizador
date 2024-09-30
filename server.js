@@ -50,7 +50,7 @@ app.get('/locations', async (req, res) => {
           SELECT device_id, latitude, longitude, velocidade, timestamp, bateria
           FROM localizacao
           ORDER BY timestamp DESC
-          LIMIT 50;  // Limite para trazer as 50 localizações mais recentes
+          LIMIT 50
       `;
       const result = await pool.query(query);
       res.status(200).json(result.rows);
@@ -59,7 +59,6 @@ app.get('/locations', async (req, res) => {
       res.status(500).json({ message: 'Erro ao buscar localizações' });
   }
 });
-
 
 // Iniciar o servidor na porta 3000
 app.listen(3000, '0.0.0.0', () => {
