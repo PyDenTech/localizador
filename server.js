@@ -15,7 +15,7 @@ const pool = new Pool({
 });
 
 // Rota para receber dados do Traccar Client
-app.post('/traccar', async (req, res) => {
+app.post('/', async (req, res) => {
     try {
       const { latitude, longitude, speed, bearing, timestamp } = req.body;
   
