@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
+const path = require('path');
 
 
 const app = express();
@@ -14,6 +15,11 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
+
+// Servir arquivos estáticos do diretório "public"
+app.use(express.static(path.join(__dirname, 'public')));
+
+
 
 // Rota principal para receber dados do Traccar Client
 app.post('/', async (req, res) => {
@@ -38,6 +44,42 @@ app.post('/', async (req, res) => {
     res.status(500).json({ message: 'Erro no servidor' });
   }
 });
+
+// Rota para adicionar um novo dispositivo
+app.post('/devices', async (req, res) => {
+  const { nome, identificador, descricao } = req.body;
+
+  // Verifica se os campos obrigatórios estão presentes
+  if (!nome || !identificador) {
+      return res.status(400).json({ message: 'Nome e Identificador são obrigatórios!' });
+  }
+
+  try {
+      const query = `
+          INSERT INTO dispositivos (nome, identificador, descricao)
+          VALUES ($1, $2, $3) RETURNING *;
+      `;
+      const result = await pool.query(query, [nome, identificador, descricao]);
+
+      res.status(201).json({ message: 'Dispositivo adicionado com sucesso!', dispositivo: result.rows[0] });
+  } catch (error) {
+      console.error('Erro ao adicionar dispositivo: ', error);
+      res.status(500).json({ message: 'Erro ao adicionar dispositivo' });
+  }
+});
+
+// Rota para listar dispositivos
+app.get('/devices', async (req, res) => {
+  try {
+      const query = 'SELECT * FROM dispositivos';
+      const result = await pool.query(query);
+      res.status(200).json(result.rows);
+  } catch (error) {
+      console.error('Erro ao buscar dispositivos: ', error);
+      res.status(500).json({ message: 'Erro ao buscar dispositivos' });
+  }
+});
+
 
 // Rota para buscar as localizações de todos os dispositivos
 app.get('/locations', async (req, res) => {
