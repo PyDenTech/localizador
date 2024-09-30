@@ -14,32 +14,27 @@ const pool = new Pool({
   }
 });
 
-// Rota para exibir mensagem na raiz
-app.get('/', (req, res) => {
-    res.send('Servidor rodando');
-});
-
-// Rota para receber dados do Traccar Client
-app.post('/traccar', async (req, res) => {
+// Rota principal para receber dados do Traccar Client
+app.post('/', async (req, res) => {
     try {
-      const { latitude, longitude, speed, bearing, timestamp } = req.body;
-  
-      if (!latitude || longitude === undefined) {
-        return res.status(400).json({ message: 'Dados inválidos!' });
-      }
-  
-      const query = `
-        INSERT INTO localizacao (latitude, longitude, velocidade, direcao, timestamp)
-        VALUES ($1, $2, $3, $4, $5)
-      `;
-      await pool.query(query, [latitude, longitude, speed, bearing, timestamp]);
-  
-      res.status(200).json({ message: 'Dados recebidos com sucesso!' });
+        const { latitude, longitude, speed, bearing, timestamp } = req.body;
+
+        if (!latitude || longitude === undefined) {
+            return res.status(400).json({ message: 'Dados inválidos!' });
+        }
+
+        const query = `
+            INSERT INTO localizacao (latitude, longitude, velocidade, direcao, timestamp)
+            VALUES ($1, $2, $3, $4, $5)
+        `;
+        await pool.query(query, [latitude, longitude, speed, bearing, timestamp]);
+
+        res.status(200).json({ message: 'Dados recebidos com sucesso!' });
     } catch (error) {
-      console.error('Erro ao processar dados: ', error);
-      res.status(500).json({ message: 'Erro no servidor' });
+        console.error('Erro ao processar dados: ', error);
+        res.status(500).json({ message: 'Erro no servidor' });
     }
-  });
+});
 
 // Iniciar o servidor na porta 3000
 app.listen(3000, '0.0.0.0', () => {
