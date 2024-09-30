@@ -16,27 +16,42 @@ const pool = new Pool({
 
 // Rota principal para receber dados do Traccar Client
 app.post('/', async (req, res) => {
-    try {
-        const { latitude, longitude, speed, bearing, timestamp } = req.body;
+  try {
+    const { deviceId, latitude, longitude, speed, bearing, timestamp } = req.body;
 
-        if (!latitude || longitude === undefined) {
-            return res.status(400).json({ message: 'Dados inválidos!' });
-        }
-
-        const query = `
-            INSERT INTO localizacao (latitude, longitude, velocidade, direcao, timestamp)
-            VALUES ($1, $2, $3, $4, $5)
-        `;
-        await pool.query(query, [latitude, longitude, speed, bearing, timestamp]);
-
-        res.status(200).json({ message: 'Dados recebidos com sucesso!' });
-    } catch (error) {
-        console.error('Erro ao processar dados: ', error);
-        res.status(500).json({ message: 'Erro no servidor' });
+    // Verifica se os dados obrigatórios estão presentes
+    if (!deviceId || !latitude || longitude === undefined) {
+      return res.status(400).json({ message: 'Dados inválidos!' });
     }
+
+    // Query para inserir dados no banco de dados, incluindo o deviceId
+    const query = `
+            INSERT INTO localizacao (device_id, latitude, longitude, velocidade, direcao, timestamp)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        `;
+    await pool.query(query, [deviceId, latitude, longitude, speed, bearing, timestamp]);
+
+    res.status(200).json({ message: 'Dados recebidos com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao processar dados: ', error);
+    res.status(500).json({ message: 'Erro no servidor' });
+  }
 });
+
+// Rota para buscar as localizações de todos os dispositivos
+app.get('/locations', async (req, res) => {
+  try {
+      const query = 'SELECT * FROM localizacao';
+      const result = await pool.query(query);
+      res.status(200).json(result.rows);
+  } catch (error) {
+      console.error('Erro ao buscar dados: ', error);
+      res.status(500).json({ message: 'Erro ao buscar dados' });
+  }
+});
+
 
 // Iniciar o servidor na porta 3000
 app.listen(3000, '0.0.0.0', () => {
-    console.log('Servidor rodando na porta 3000');
+  console.log('Servidor rodando na porta 3000');
 });
