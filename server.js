@@ -1,21 +1,20 @@
+require('dotenv').config();  // Carrega as variáveis do .env
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 
-// Inicializando o servidor Express
 const app = express();
 app.use(bodyParser.json());
 
-// Configuração do PostgreSQL
+// Usar a variável de ambiente para o banco de dados
 const pool = new Pool({
-  user: 'seu_usuario',
-  host: 'localhost',
-  database: 'seu_banco_de_dados',
-  password: 'sua_senha',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// Rota para capturar os dados do Traccar Client
+// Rota para receber dados do Traccar Client
 app.post('/', async (req, res) => {
   try {
     const { latitude, longitude, speed, bearing, timestamp } = req.body;
@@ -37,7 +36,6 @@ app.post('/', async (req, res) => {
   }
 });
 
-// Iniciar o servidor na porta 5055
 const port = 5055;
 app.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${port}`);
